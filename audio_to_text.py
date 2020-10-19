@@ -90,3 +90,7 @@ if __name__ == "__main__":
     summary = wikipedia.summary(topic, auto_suggest=True, sentences=4)
     print("Here are some information about {}\n".format(topic))
     print(summary)
+    
+    url = wikipedia.WikipediaPage(topic).url
+    print("\nsource: {}\n".format(url))
+
