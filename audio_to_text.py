@@ -64,6 +64,20 @@ def get_wikipedia_summary(t, s):
     print(summary)
 
 
+def get_categories(topic):
+    r = requests.get('https://en.wikipedia.org/wiki/{}'.format(topic))
+    if r.status_code == 200:
+        soup: bs4.BeautifulSoup = BeautifulSoup(r.content, "html.parser")
+
+    categories = list()
+    for category in soup.find_all(None, {"class": "toclevel-1"}, recursive=True):
+        end_index = category.text.find('\n')
+        main_category = category.text[:end_index]
+        categories.append(main_category)
+
+    return categories
+
+
 if __name__ == "__main__":
 
     MIC_NAME = "DELL PRO STEREO HEADSET UC150: USB Audio (hw:2,0)"
@@ -83,14 +97,35 @@ if __name__ == "__main__":
             break
         ATTEMPTS -= 1
         print("Didn't get that. Repeat please.  (remaining attempts: {})".format(ATTEMPTS))
+        r = recognize_speech_from_mic(recognizer, microphone)
+    ATTEMPTS = 2
 
     topic = r["transcription"]
     print("\nYou chose: ", topic, "\n")
 
-    summary = wikipedia.summary(topic, auto_suggest=True, sentences=4)
-    print("Here are some information about {}\n".format(topic))
-    print(summary)
-    
+    get_wikipedia_summary(topic, 3)
+
     url = wikipedia.WikipediaPage(topic).url
     print("\nsource: {}\n".format(url))
+
+    print("Do you want to see related categories ?  (Yes, No)")
+    r = recognize_speech_from_mic(recognizer, microphone)
+
+    for _ in range(ATTEMPTS):
+        if r["transcription"]:
+            break
+        if not r["success"]:
+            break
+        ATTEMPTS -= 1
+        print("This is Yes-No question (remaining attempts: {})".format(ATTEMPTS))
+        r = recognize_speech_from_mic(recognizer, microphone)
+    ATTEMPTS = 2
+
+    if r["transcription"] == "yes":
+        print()
+        for category in get_categories(topic):
+            print(category)
+        print()
+    elif r["transcription"] == "no":
+        pass
 
